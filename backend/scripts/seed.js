@@ -1098,91 +1098,7 @@ async function runSeed() {
 
   verifyBusinessIsolation(data);
 
-  // 1. Auth Service Database
-  const authDb = env.DB.AUTH_NAME || 'dropship_auth';
-  const authClient = createClient(authDb);
-  try {
-    await authClient.connect();
-    await seedAuthDB(authClient, data, passwordHash);
-    console.log(`✅ [${authDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${authDb}]:`, err.message);
-    throw err;
-  } finally {
-    await authClient.end().catch(() => {});
-  }
-
-  // 2. Business Service Database
-  const bizDb = env.DB.BUSINESS_NAME || 'dropship_business';
-  const bizClient = createClient(bizDb);
-  try {
-    await bizClient.connect();
-    await seedBusinessDB(bizClient, data);
-    console.log(`✅ [${bizDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${bizDb}]:`, err.message);
-    throw err;
-  } finally {
-    await bizClient.end().catch(() => {});
-  }
-
-  // 3. Product Service Database
-  const prodDb = env.DB.PRODUCT_NAME || 'dropship_product';
-  const prodClient = createClient(prodDb);
-  try {
-    await prodClient.connect();
-    await seedProductDB(prodClient, data);
-    console.log(`✅ [${prodDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${prodDb}]:`, err.message);
-    throw err;
-  } finally {
-    await prodClient.end().catch(() => {});
-  }
-
-  // 4. Order Service Database
-  const orderDb = env.DB.ORDER_NAME || 'dropship_order';
-  const orderClient = createClient(orderDb);
-  try {
-    await orderClient.connect();
-    await seedOrderDB(orderClient, data);
-    console.log(`✅ [${orderDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${orderDb}]:`, err.message);
-    throw err;
-  } finally {
-    await orderClient.end().catch(() => {});
-  }
-
-  // 5. Marketing Service Database
-  const mktDb = env.DB.MARKETING_NAME || 'dropship_marketing';
-  const mktClient = createClient(mktDb);
-  try {
-    await mktClient.connect();
-    await seedMarketingDB(mktClient, data);
-    console.log(`✅ [${mktDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${mktDb}]:`, err.message);
-    throw err;
-  } finally {
-    await mktClient.end().catch(() => {});
-  }
-
-  // 6. Analytics Service Database
-  const analyticsDb = env.DB.ANALYTICS_NAME || 'dropship_analytics';
-  const analyticsClient = createClient(analyticsDb);
-  try {
-    await analyticsClient.connect();
-    await seedAnalyticsDB(analyticsClient, data);
-    console.log(`✅ [${analyticsDb}] Seeded successfully.\n`);
-  } catch (err) {
-    console.error(`❌ Failed to seed [${analyticsDb}]:`, err.message);
-    throw err;
-  } finally {
-    await analyticsClient.end().catch(() => {});
-  }
-
-  // 7. Unified Management Database
+  // Primary Unified Database (Render / Cloud environment)
   const mgmtDb = env.DB.NAME || 'dropship_management';
   const mgmtClient = createClient(mgmtDb);
   try {
@@ -1190,9 +1106,33 @@ async function runSeed() {
     await seedUnifiedManagementDB(mgmtClient, data, passwordHash);
     console.log(`✅ [${mgmtDb}] Seeded synchronized unified DB successfully.\n`);
   } catch (err) {
-    console.log(`⚠️ [${mgmtDb}] Unified fallback copy skipped (${err.message}).\n`);
+    console.error(`❌ Failed to seed unified DB [${mgmtDb}]:`, err.message);
   } finally {
     await mgmtClient.end().catch(() => {});
+  }
+
+  // Optional Microservice Sub-Databases (Development multi-DB setup)
+  const subDbs = [
+    { name: env.DB.AUTH_NAME || 'dropship_auth', seeder: seedAuthDB },
+    { name: env.DB.BUSINESS_NAME || 'dropship_business', seeder: seedBusinessDB },
+    { name: env.DB.PRODUCT_NAME || 'dropship_product', seeder: seedProductDB },
+    { name: env.DB.ORDER_NAME || 'dropship_order', seeder: seedOrderDB },
+    { name: env.DB.MARKETING_NAME || 'dropship_marketing', seeder: seedMarketingDB },
+    { name: env.DB.ANALYTICS_NAME || 'dropship_analytics', seeder: seedAnalyticsDB },
+  ];
+
+  for (const { name, seeder } of subDbs) {
+    if (name === mgmtDb) continue;
+    const client = createClient(name);
+    try {
+      await client.connect();
+      await seeder(client, data, passwordHash);
+      console.log(`✅ [${name}] Seeded successfully.\n`);
+    } catch (err) {
+      console.log(`ℹ️ [${name}] Sub-database skipped (${err.message}). Using unified DB.\n`);
+    } finally {
+      await client.end().catch(() => {});
+    }
   }
 
   console.log('================================================================');
