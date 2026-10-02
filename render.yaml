@@ -1,0 +1,48 @@
+services:
+  # Backend Web Service (API Gateway & Microservices)
+  - type: web
+    name: dropship-backend-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DB_HOST
+        fromDatabase:
+          name: dropship-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: dropship-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: dropship-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: dropship-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: dropship-postgres
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false # Set to your Vercel URL (e.g., https://your-app.vercel.app)
+
+databases:
+  # Managed PostgreSQL Database on Render
+  - name: dropship-postgres
+    databaseName: dropship_management
+    user: postgres
+    plan: free
