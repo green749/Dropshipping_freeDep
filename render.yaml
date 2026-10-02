@@ -37,12 +37,10 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
-      - key: FRONTEND_URL
-        sync: false # Set to your Vercel URL (e.g., https://your-app.vercel.app)
 
 databases:
   # Managed PostgreSQL Database on Render
   - name: dropship-postgres
     databaseName: dropship_management
-    user: postgres
+    user: dropship_user
     plan: free
