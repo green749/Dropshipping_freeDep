@@ -17,12 +17,14 @@ const DEFAULT_PASSWORD = 'Password123!';
 
 // Helper to create PostgreSQL client
 function createClient(database) {
+  const isProd = env.NODE_ENV === 'production' || env.DB.HOST.includes('onrender.com') || env.DB.HOST.startsWith('dpg-');
   return new pg.Client({
     host: env.DB.HOST || 'localhost',
     port: env.DB.PORT || 5432,
     user: env.DB.USER || 'postgres',
     password: env.DB.PASSWORD || 'postgres',
     database,
+    ssl: isProd ? { rejectUnauthorized: false } : false,
   });
 }
 

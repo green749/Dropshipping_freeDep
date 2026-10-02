@@ -13,6 +13,7 @@
     "dev:order": "nodemon --exec \"node --max-old-space-size=2048\" services/order-service/server.js",
     "dev:marketing": "nodemon --exec \"node --max-old-space-size=2048\" services/marketing-service/server.js",
     "dev:analytics": "nodemon --exec \"node --max-old-space-size=2048\" services/analytics-service/server.js",
+    "prestart": "node scripts/seed.js",
     "start": "concurrently \"node services/api-gateway/server.js\" \"node services/auth-service/server.js\" \"node services/business-dealer-service/server.js\" \"node services/product-service/server.js\" \"node services/order-service/server.js\" \"node services/marketing-service/server.js\" \"node services/analytics-service/server.js\"",
     "start:gateway": "node services/api-gateway/server.js",
     "start:auth": "nodemon --exec \"node --max-old-space-size=2048\" services/auth-service/server.js",
