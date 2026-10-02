@@ -10,6 +10,28 @@ dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config();
 
+let parsedDbHost = process.env.DB_HOST || '127.0.0.1';
+let parsedDbUser = process.env.DB_USER || 'postgres';
+let parsedDbPassword = process.env.DB_PASSWORD || 'postgres_dev_pass_2026';
+let parsedDbPort = parseInt(process.env.DB_PORT || '5432', 10);
+let parsedDbName = process.env.DB_NAME || 'dropship_management';
+
+const rawDbConn = process.env.DATABASE_URL || process.env.DB_HOST || '';
+if (rawDbConn.startsWith('postgres://') || rawDbConn.startsWith('postgresql://')) {
+  try {
+    const u = new URL(rawDbConn);
+    parsedDbHost = u.hostname;
+    parsedDbPort = parseInt(u.port || '5432', 10);
+    if (u.username) parsedDbUser = decodeURIComponent(u.username);
+    if (u.password) parsedDbPassword = decodeURIComponent(u.password);
+    if (u.pathname && u.pathname.length > 1) {
+      parsedDbName = u.pathname.substring(1);
+    }
+  } catch (e) {
+    console.warn('⚠️ Failed to parse PostgreSQL connection URL:', e.message);
+  }
+}
+
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   ALEXANDER_ADMIN_ID: process.env.ALEXANDER_ADMIN_ID || 'a0000000-0000-4000-8000-000000000001',
@@ -21,17 +43,17 @@ export const env = {
   MARKETING_SERVICE_URL: process.env.MARKETING_SERVICE_URL || 'http://127.0.0.1:5005',
   ANALYTICS_SERVICE_URL: process.env.ANALYTICS_SERVICE_URL || 'http://127.0.0.1:5006',
   DB: {
-    HOST: process.env.DB_HOST || '127.0.0.1',
-    PORT: parseInt(process.env.DB_PORT || '5432', 10),
-    NAME: process.env.DB_NAME || 'dropship_management',
-    AUTH_NAME: process.env.AUTH_DB_NAME || 'dropship_auth',
-    BUSINESS_NAME: process.env.BUSINESS_DB_NAME || 'dropship_business',
-    PRODUCT_NAME: process.env.PRODUCT_DB_NAME || 'dropship_product',
-    ORDER_NAME: process.env.ORDER_DB_NAME || 'dropship_order',
-    MARKETING_NAME: process.env.MARKETING_DB_NAME || 'dropship_marketing',
-    ANALYTICS_NAME: process.env.ANALYTICS_DB_NAME || 'dropship_analytics',
-    USER: process.env.DB_USER || 'postgres',
-    PASSWORD: process.env.DB_PASSWORD || 'postgres_dev_pass_2026',
+    HOST: parsedDbHost,
+    PORT: parsedDbPort,
+    NAME: parsedDbName,
+    AUTH_NAME: process.env.AUTH_DB_NAME || parsedDbName,
+    BUSINESS_NAME: process.env.BUSINESS_DB_NAME || parsedDbName,
+    PRODUCT_NAME: process.env.PRODUCT_DB_NAME || parsedDbName,
+    ORDER_NAME: process.env.ORDER_DB_NAME || parsedDbName,
+    MARKETING_NAME: process.env.MARKETING_DB_NAME || parsedDbName,
+    ANALYTICS_NAME: process.env.ANALYTICS_DB_NAME || parsedDbName,
+    USER: parsedDbUser,
+    PASSWORD: parsedDbPassword,
     LOGGING: process.env.DB_LOGGING === 'true' ? console.log : false,
   },
   JWT: {

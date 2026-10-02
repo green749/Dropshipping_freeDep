@@ -15,12 +15,15 @@ export const setServiceDatabase = (dbName) => {
 export const ensureDatabaseExists = async (targetDbName) => {
   if (isTest || !targetDbName) return;
 
+  const isProd = env.NODE_ENV === 'production' || env.DB.HOST.includes('onrender.com') || env.DB.HOST.startsWith('dpg-');
+
   const client = new pg.Client({
     host: env.DB.HOST,
     port: env.DB.PORT,
     user: env.DB.USER,
     password: env.DB.PASSWORD,
     database: 'postgres',
+    ssl: isProd ? { rejectUnauthorized: false } : false,
   });
 
   try {
@@ -57,12 +60,15 @@ export const getSequelize = (dbName = currentActiveDb) => {
   }
 
   const targetName = dbName || env.DB.NAME;
+  const isProd = env.NODE_ENV === 'production' || env.DB.HOST.includes('onrender.com') || env.DB.HOST.startsWith('dpg-');
+
   if (!instances.has(targetName)) {
     const instance = new Sequelize(targetName, env.DB.USER, env.DB.PASSWORD, {
       host: env.DB.HOST,
       port: env.DB.PORT,
       dialect: 'postgres',
       logging: env.DB.LOGGING,
+      dialectOptions: isProd ? { ssl: { require: true, rejectUnauthorized: false } } : {},
       pool: {
         max: 10,
         min: 0,
