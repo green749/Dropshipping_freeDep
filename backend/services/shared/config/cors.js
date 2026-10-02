@@ -19,7 +19,8 @@ export const corsOptions = {
     if (
       allowed.includes(origin) ||
       /^http:\/\/localhost:[0-9]+$/.test(origin) ||
-      /^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin)
+      /^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin) ||
+      /\.vercel\.app$/.test(origin)
     ) {
       return callback(null, true);
     }

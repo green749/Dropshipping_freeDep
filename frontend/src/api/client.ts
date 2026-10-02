@@ -1,8 +1,10 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { getCookie, setAuthCookies, clearAuthCookies } from '../utils/cookie';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 export const apiClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL ? (API_BASE_URL.endsWith('/api/v1') ? API_BASE_URL : `${API_BASE_URL}/api/v1`) : '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -88,8 +90,12 @@ apiClient.interceptors.response.use(
 
         try {
           // Call refresh endpoint with refresh token
+          const refreshEndpoint = API_BASE_URL
+            ? (API_BASE_URL.endsWith('/api/v1') ? `${API_BASE_URL}/auth/refresh` : `${API_BASE_URL}/api/v1/auth/refresh`)
+            : '/api/v1/auth/refresh';
+
           const refreshRes = await axios.post(
-            '/api/v1/auth/refresh',
+            refreshEndpoint,
             { refreshToken },
             { withCredentials: true }
           );
