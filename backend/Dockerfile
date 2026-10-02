@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["node", "services/api-gateway/server.js"]
+CMD ["npm", "start"]

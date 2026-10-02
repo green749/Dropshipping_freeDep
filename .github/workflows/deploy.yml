@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Docker Hub & AWS EC2 Deployment
+name: CI/CD Pipeline - Render & Vercel Deployment
 
 on:
   push:
@@ -6,18 +6,21 @@ on:
       - main
 
 jobs:
-  build-and-push:
-    name: Build & Push Docker Images
+  # -------------------------------------------------------------
+  # Job 1: Build Backend Docker Image & Push to Docker Hub
+  # -------------------------------------------------------------
+  build-and-push-backend:
+    name: 🐳 Build & Push Backend Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -32,108 +35,58 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/dropship-backend:latest
 
-      - name: Build & Push Frontend Image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/dropship-frontend:latest
-
-  deploy-to-aws:
-    name: Deploy to AWS EC2
-    needs: build-and-push
+  # -------------------------------------------------------------
+  # Job 2: Trigger Automatic Deployment on Render
+  # -------------------------------------------------------------
+  deploy-to-render:
+    name: 🚀 Deploy Backend to Render
+    needs: build-and-push-backend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Trigger Render Deploy Hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "📡 Triggering Render Deployment..."
+            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "✅ Render deployment triggered successfully!"
+          else
+            echo "⚠️ RENDER_DEPLOY_HOOK_URL secret not set. Render will auto-deploy via GitHub push."
+          fi
+
+  # -------------------------------------------------------------
+  # Job 3: Build & Deploy Frontend to Vercel
+  # -------------------------------------------------------------
+  deploy-to-vercel:
+    name: ⚡ Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME || 'ubuntu' }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script_stop: true
-          envs: DOCKER_HUB_USER,DOCKER_HUB_PASS
-          script: |
-            set -e
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-            echo "🚀 Starting EC2 Deployment..."
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
 
-            # 1. Expand disk partition if AWS EBS volume was resized
-            echo "💾 Expanding disk partition..."
-            sudo growpart /dev/nvme0n1 1 2>/dev/null || sudo growpart /dev/xvda 1 2>/dev/null || true
-            sudo resize2fs /dev/nvme0n1p1 2>/dev/null || sudo resize2fs /dev/xvda1 2>/dev/null || sudo xfs_growfs / 2>/dev/null || true
-
-            # 2. Re-create optimized 2GB Swap file to free up hard drive space
-            if [ -f /swapfile ] && [ $(stat -c%s /swapfile 2>/dev/null || echo 0) -gt 3000000000 ]; then
-              echo "🧹 Optimizing swapfile size to 2GB..."
-              sudo swapoff /swapfile || true
-              sudo rm -f /swapfile
-            fi
-
-            if [ ! -f /swapfile ]; then
-              echo "💾 Creating 2GB Swap Space..."
-              sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-              sudo chmod 600 /swapfile
-              sudo mkswap /swapfile
-              sudo swapon /swapfile
-              grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab || true
-            fi
-
-            # 3. Clean system logs & old docker caches to free disk space
-            echo "🧹 Cleaning up system logs & unused Docker layers..."
-            sudo journalctl --vacuum-time=1d 2>/dev/null || true
-            sudo docker system prune -af --volumes || true
-
-            # 4. Install Docker on EC2 if missing
-            if ! command -v docker >/dev/null 2>&1; then
-              echo "📦 Docker not found. Installing Docker on EC2..."
-              sudo apt-get update -y
-              sudo apt-get install -y docker.io git curl
-              sudo systemctl enable --now docker || true
-              sudo usermod -aG docker ubuntu || true
-            fi
-
-            # 5. Install Docker Compose plugin if missing
-            if ! sudo docker compose version >/dev/null 2>&1; then
-              echo "📦 Docker Compose not found. Installing Docker Compose..."
-              sudo apt-get update -y
-              sudo apt-get install -y docker-compose-v2 || sudo apt-get install -y docker-compose || true
-            fi
-
-            # 6. Log in to Docker Hub on EC2
-            if [ -n "$DOCKER_HUB_USER" ] && [ -n "$DOCKER_HUB_PASS" ]; then
-              echo "🔐 Authenticating Docker Hub on EC2..."
-              echo "$DOCKER_HUB_PASS" | sudo docker login -u "$DOCKER_HUB_USER" --password-stdin
-              export DOCKER_HUB_USERNAME="$DOCKER_HUB_USER"
-            fi
-
-            # 7. Clone or update repository
-            APP_DIR="$HOME/Dropshipping"
-            if [ ! -d "$APP_DIR/.git" ]; then
-              echo "📥 Fresh cloning repository..."
-              rm -rf "$APP_DIR"
-              git clone https://github.com/green749/Dropshipping.git "$APP_DIR"
-            fi
-
-            cd "$APP_DIR"
-            git fetch origin main
-            git reset --hard origin/main
-
-            # 8. Pull & deploy production containers
-            echo "📥 Pulling latest Docker Hub images..."
-            DOCKER_HUB_USERNAME="${DOCKER_HUB_USER:-green749}" sudo -E docker compose -f docker-compose.prod.yml pull
-
-            echo "🐳 Starting production containers..."
-            DOCKER_HUB_USERNAME="${DOCKER_HUB_USER:-green749}" sudo -E docker compose -f docker-compose.prod.yml down --remove-orphans || true
-            DOCKER_HUB_USERNAME="${DOCKER_HUB_USER:-green749}" sudo -E docker compose -f docker-compose.prod.yml up -d --force-recreate
-
-            sudo docker ps
-            sudo docker system prune -af || true
-
-            echo "✅ Deployment completed successfully!"
+      - name: Build Frontend Application
+        working-directory: ./frontend
+        run: npm run build
         env:
-          DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_HUB_PASS: ${{ secrets.DOCKER_HUB_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          vercel-args: '--prod'
