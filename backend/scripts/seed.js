@@ -6,7 +6,9 @@ import {
   BUSINESS_TEMPLATES,
   BUSINESS_CATEGORIES,
   PRODUCT_CATALOG_TEMPLATES,
+  PRODUCT_IMAGE_MAP,
   PRODUCT_CATEGORY_IMAGES,
+  BUSINESS_DEALERS_MAP,
   FIRST_NAMES,
   LAST_NAMES,
   CITIES_STATES,
@@ -170,7 +172,9 @@ function generateDataset(passwordHash) {
       const dealerObj = {
         id: uuidv4(),
         user_id: dUser.id,
-        company_name: `${bt.name.split(' ')[0]} Wholesale Partner ${d + 1}`,
+        company_name: (BUSINESS_DEALERS_MAP && BUSINESS_DEALERS_MAP[bt.key] && BUSINESS_DEALERS_MAP[bt.key][d])
+          ? BUSINESS_DEALERS_MAP[bt.key][d]
+          : `${bt.name.split(' ')[0]} Wholesale Partner ${d + 1}`,
         contact_name: dUser.name,
         email: dUser.email,
         phone: `+1 (800) 555-02${bIdx}${d}`,
@@ -334,27 +338,60 @@ function generateDataset(passwordHash) {
     const bProducts = [];
     const categories = BUSINESS_CATEGORIES[bIdx];
     let prodCounter = 0;
-    categories.forEach((catName) => {
-      const templates = PRODUCT_CATALOG_TEMPLATES[catName] || ['Standard Product Item'];
-      for (let p = 0; p < 16; p++) {
-        prodCounter++;
-        const baseName = templates[p % templates.length];
-        const prodName = (p >= templates.length) ? `${baseName} Pro Series v${Math.floor(p / templates.length) + 1}` : baseName;
-        const assignedDealer = bDealers[prodCounter % bDealers.length];
-        const costPrice = parseFloat((15.00 + (prodCounter * 7.50) % 280).toFixed(2));
-        const sellingPrice = parseFloat((costPrice * (1 + bt.profit_margin / 100)).toFixed(2));
-        const stockQty = 20 + (prodCounter * 17) % 220;
+    const MARGIN_TIERS = [0.18, 0.22, 0.25, 0.28, 0.32, 0.35, 0.40, 0.45];
 
-        const categoryImageList = PRODUCT_CATEGORY_IMAGES[catName] || [bt.logo];
-        const pImg = categoryImageList[p % categoryImageList.length];
+    categories.forEach((catName, catIdx) => {
+      const templates = PRODUCT_CATALOG_TEMPLATES[catName] || ['Standard Product Item'];
+      for (let p = 0; p < templates.length; p++) {
+        prodCounter++;
+        const prodName = templates[p];
+        const assignedDealer = bDealers[p % bDealers.length];
+
+        // Varied profit margins per product (18%, 22%, 25%, 28%, 32%, 35%, 40%, 45%)
+        const marginRate = MARGIN_TIERS[(bIdx * 11 + catIdx * 7 + p * 3) % MARGIN_TIERS.length];
+        const costPrice = parseFloat((12.50 + ((prodCounter * 17 + p * 9) % 320)).toFixed(2));
+        const sellingPrice = parseFloat((costPrice * (1 + marginRate)).toFixed(2));
+
+        // Realistic Stock Levels: Low (0-10), Normal (11-50), Healthy (51-150), High (151-500), OUT_OF_STOCK when 0
+        const stockHash = (prodCounter * 43 + p * 23 + bIdx * 17) % 100;
+        let stockQty;
+        let status = 'ACTIVE';
+        if (stockHash < 6) {
+          stockQty = 0;
+          status = 'OUT_OF_STOCK';
+        } else if (stockHash < 22) {
+          stockQty = 1 + (stockHash % 10);
+        } else if (stockHash < 55) {
+          stockQty = 11 + (stockHash % 40);
+        } else if (stockHash < 82) {
+          stockQty = 51 + (stockHash % 100);
+        } else {
+          stockQty = 151 + (stockHash % 350);
+        }
+
+        if (status !== 'OUT_OF_STOCK' && stockHash > 96) {
+          status = 'INACTIVE';
+        }
+
+        // Domain-specific SKU
+        const catCode = catName.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase();
+        const skuPrefix = bt.code || bt.key.substring(0, 4);
+        const sku = `${skuPrefix}-${catCode}-${(p + 1).toString().padStart(3, '0')}`;
+
+        // Dedicated product image lookup
+        const pImg = (PRODUCT_IMAGE_MAP && PRODUCT_IMAGE_MAP[prodName])
+          ? PRODUCT_IMAGE_MAP[prodName]
+          : ((PRODUCT_CATEGORY_IMAGES[catName] && PRODUCT_CATEGORY_IMAGES[catName].length > 0)
+              ? PRODUCT_CATEGORY_IMAGES[catName][p % PRODUCT_CATEGORY_IMAGES[catName].length]
+              : bt.logo);
 
         const prodObj = {
           id: uuidv4(),
           business_id: bt.id,
           dealer_id: assignedDealer.id,
           name: prodName,
-          sku: `SKU-${bt.key}-${prodCounter.toString().padStart(3, '0')}`,
-          description: `Premium high-performance ${prodName.toLowerCase()} engineered for reliability and sleek modern design.`,
+          sku: sku,
+          description: `${prodName} engineered with commercial-grade specifications, high durability, and modern aesthetics. Designed for ${catName.toLowerCase()} applications. Includes standard manufacturer accessories and warranty.`,
           category: catName,
           cost_price: costPrice,
           selling_price: sellingPrice,
@@ -365,7 +402,7 @@ function generateDataset(passwordHash) {
           safety_stock: 5,
           target_stock_days: 14,
           images: JSON.stringify([pImg]),
-          status: 'ACTIVE',
+          status: status,
           created_at: new Date(nowMs - 365 * 86400 * 1000),
           updated_at: now
         };
