@@ -5,15 +5,15 @@ import { v4 as uuidv4 } from 'uuid';
 // ============================================================================
 export const BUSINESS_TEMPLATES = [
   {
-    key: 'TECHCART',
+    key: 'STYLEMART',
     id: 'b0000000-0000-4000-8000-000000000001',
-    name: 'TechCart Electronics',
-    description: 'Premier distributor of pro audio gear, ergonomic workspace solutions, mechanical keyboards, and creator tech.',
-    logo: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&auto=format&fit=crop&q=80',
-    email: 'support@techcart.io',
+    name: 'StyleMart Fashion & Kidswear',
+    description: 'Sustainable urban activewear, minimalist kidswear, handcrafted leather goods, and premium apparel.',
+    logo: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&auto=format&fit=crop&q=80',
+    email: 'concierge@stylemart.co',
     phone: '+1 (800) 555-0101',
-    address: '500 Tech Valley Blvd, Suite 400, San Jose, CA 95110',
-    profit_margin: 28.50,
+    address: '742 Fashion Ave, New York, NY 10018',
+    profit_margin: 40.00,
     status: 'ACTIVE',
   },
   {
@@ -29,21 +29,21 @@ export const BUSINESS_TEMPLATES = [
     status: 'ACTIVE',
   },
   {
-    key: 'PETCARE',
+    key: 'TECHCART',
     id: 'b0000000-0000-4000-8000-000000000003',
-    name: 'PetCare Hub',
-    description: 'Holistic pet nutrition, automated feeders, smart tracking collars, and ergonomic pet furniture.',
-    logo: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=200&auto=format&fit=crop&q=80',
-    email: 'care@petcarehub.com',
+    name: 'TechCart Electronics',
+    description: 'Premier distributor of pro audio gear, ergonomic workspace solutions, mechanical keyboards, and creator tech.',
+    logo: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&auto=format&fit=crop&q=80',
+    email: 'support@techcart.io',
     phone: '+1 (800) 555-0103',
-    address: '88 Barker Ave, Austin, TX 78701',
-    profit_margin: 35.00,
+    address: '500 Tech Valley Blvd, Suite 400, San Jose, CA 95110',
+    profit_margin: 28.50,
     status: 'ACTIVE',
   },
   {
-    key: 'STYLEMART',
+    key: 'URBANSTYLE',
     id: 'b0000000-0000-4000-8000-000000000004',
-    name: 'StyleMart Apparel',
+    name: 'UrbanStyle Apparel',
     description: 'Sustainable urban activewear, minimalist outerwear, handcrafted leather goods, and premium footwear.',
     logo: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&auto=format&fit=crop&q=80',
     email: 'concierge@stylemart.co',
@@ -128,10 +128,10 @@ export const BUSINESS_TEMPLATES = [
 
 // Seed Category Names per Business Index
 export const BUSINESS_CATEGORIES = [
-  ['Pro Audio', 'Ergonomics', 'Keyboards & Mice', 'Creator Studio', 'Display & Mounts'],
+  ['Kidswear & Frocks', 'Boys Casuals & Shirts', 'Urban Activewear', 'Outerwear', 'Leather Goods'],
   ['Modern Furniture', 'Ambient Lighting', 'Kitchenware', 'Home Decor', 'Organization'],
+  ['Pro Audio', 'Ergonomics', 'Keyboards & Mice', 'Creator Studio', 'Display & Mounts'],
   ['Pet Food & Treats', 'Interactive Toys', 'Smart Feeders', 'Grooming & Care', 'Beds & Furniture'],
-  ['Urban Activewear', 'Outerwear', 'Leather Goods', 'Footwear', 'Bags & Packs'],
   ['Chef Cookware', 'Small Appliances', 'Coffee & Espresso', 'Bakeware Pro', 'Kitchen Gadgets'],
   ['Weights & Dumbbells', 'Cardio Equipment', 'Recovery & Massage', 'Fitness Wearables', 'Yoga & Mobility'],
   ['Smart Home IoT', 'Drones & Action Cams', 'Wireless Chargers', 'Portable Power', 'AR/VR Accessories'],
@@ -142,6 +142,9 @@ export const BUSINESS_CATEGORIES = [
 
 // Product Name Templates per Category
 export const PRODUCT_CATALOG_TEMPLATES = {
+  'Kidswear & Frocks': ['Cotton Printed T-Shirt', 'Girls Floral Frock', 'Denim Shorts for Kids', 'Cotton Joggers Kidswear', 'Party Wear Princess Dress'],
+  'Boys Casuals & Shirts': ['Boys Casual Plaid Shirt', 'Kids Fleece Hoodie', 'Baby Romper Organic Cotton', 'Boys Denim Jacket', 'Kids Athletic Tracksuit'],
+
   'Pro Audio': ['Studio Monitor Speaker 8"', 'Condenser Podcast Microphone', 'USB-C Audio Interface 4-Channel', 'Acoustic Foam Sound Panels 12-Pack', 'Studio Monitoring Headphones'],
   'Ergonomics': ['Electric Dual-Motor Standing Desk', 'Ergonomic Mesh Task Chair', 'Adjustable Aluminum Monitor Arm', 'Under-Desk Footrest Ottoman', 'Memory Foam Wrist Rest'],
   'Keyboards & Mice': ['Custom Gasket Mechanical Keyboard', 'Ultra-Light Precision Wireless Mouse', 'Hot-Swappable Tactile Switches (90x)', 'Custom Coiled Aviator USB Cable', 'PBT Dye-Sub Custom Keycaps'],

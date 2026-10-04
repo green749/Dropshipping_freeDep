@@ -53,6 +53,8 @@ function generateDataset(passwordHash) {
   const expenses = [];
   const notifications = [];
   const auditLogs = [];
+  const productResearch = [];
+  const creativeGenerations = [];
 
   // Standard Seed Account References for Easy Testing
   const PRIMARY_ADMIN = {
@@ -644,6 +646,67 @@ function generateDataset(passwordHash) {
       ip_address: '192.168.1.1',
       created_at: now
     });
+
+    // Create 15 Product Research Records for this Business
+    const researchStatuses = ['IDEA', 'RESEARCHING', 'READY_TO_TEST', 'TESTING', 'APPROVED', 'REJECTED'];
+    for (let pr = 0; pr < 15; pr++) {
+      const catName = BUSINESS_CATEGORIES[bIdx][pr % BUSINESS_CATEGORIES[bIdx].length];
+      const prodRef = bProducts[pr % bProducts.length];
+      const st = researchStatuses[pr % researchStatuses.length];
+      const estCost = parseFloat((20.00 + pr * 12.50).toFixed(2));
+      const expPrice = parseFloat((estCost * 1.45).toFixed(2));
+
+      productResearch.push({
+        id: uuidv4(),
+        business_id: bt.id,
+        product_name: `${catName} Research Model v${pr + 1}`,
+        product_url: `https://supplier-catalog.test/item-${bt.key.toLowerCase()}-${pr + 1}`,
+        category: catName,
+        dealer_id: bDealers[pr % bDealers.length].id,
+        source: pr % 2 === 0 ? 'Supplier Catalog' : 'Competitor Analysis',
+        estimated_cost: estCost,
+        expected_selling_price: expPrice,
+        estimated_shipping_cost: (8.50).toFixed(2),
+        estimated_marketing_cost: (15.00).toFixed(2),
+        estimated_units: 50 + pr * 10,
+        competitor_price: (expPrice * 1.10).toFixed(2),
+        target_audience: `${catName} Enthusiasts & Retail Buyers`,
+        status: st,
+        notes: `Feasibility analysis and unit economics calculation completed for ${catName}.`,
+        tags: [catName.toLowerCase(), 'trending', 'q3-test'],
+        converted_product_id: st === 'APPROVED' ? prodRef.id : null,
+        created_by: adminUser.id,
+        created_at: new Date(nowMs - (30 - pr * 2) * 86400 * 1000),
+        updated_at: now
+      });
+    }
+
+    // Create 10 Creative Generations for this Business
+    for (let cg = 0; cg < 10; cg++) {
+      const mUser = bMarketers[cg % bMarketers.length];
+      const prodRef = bProducts[cg % bProducts.length];
+      const campRef = campaigns[cg % campaigns.length];
+      const cgStatus = ['COMPLETED', 'COMPLETED', 'PROCESSING', 'PENDING', 'FAILED'][cg % 5];
+
+      creativeGenerations.push({
+        id: uuidv4(),
+        conversation_id: uuidv4(),
+        campaign_id: campRef ? campRef.id : null,
+        product_id: prodRef.id,
+        user_id: mUser.id,
+        type: cg % 2 === 0 ? 'image' : 'video',
+        prompt: `High-resolution studio product shot of ${prodRef.name}, cinematic warm ambient lighting, 8k resolution.`,
+        reference_image_url: bt.logo,
+        previous_generation_id: null,
+        generated_media_url: cgStatus === 'COMPLETED' ? (Array.isArray(prodRef.images) ? prodRef.images[0] : bt.logo) : null,
+        status: cgStatus,
+        provider: cg % 2 === 0 ? 'Gemini AI' : 'OpenAI DALL-E',
+        provider_generation_id: `gen_ext_${bt.key.toLowerCase()}_${cg + 1}`,
+        error_message: cgStatus === 'FAILED' ? 'Timeout generating video frames from provider' : null,
+        created_at: new Date(nowMs - (15 - cg) * 86400 * 1000),
+        updated_at: now
+      });
+    }
   });
 
   return {
@@ -665,7 +728,9 @@ function generateDataset(passwordHash) {
     chatMessages,
     expenses,
     notifications,
-    auditLogs
+    auditLogs,
+    productResearch,
+    creativeGenerations
   };
 }
 
@@ -755,7 +820,7 @@ async function seedBusinessDB(client, data) {
 }
 
 async function seedProductDB(client, data) {
-  console.log('  📦 Seeding Product Service DB (products, inventory_transactions)...');
+  console.log('  📦 Seeding Product Service DB (products, inventory_transactions, product_research)...');
   await client.query(`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS business_id UUID;
     ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_quantity INTEGER NOT NULL DEFAULT 0;
@@ -781,15 +846,46 @@ async function seedProductDB(client, data) {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS product_research (
+      id UUID PRIMARY KEY,
+      business_id UUID,
+      product_name VARCHAR(255) NOT NULL,
+      product_url VARCHAR(255),
+      category VARCHAR(100) DEFAULT 'General',
+      dealer_id UUID,
+      source VARCHAR(100) DEFAULT 'Manual Research',
+      estimated_cost NUMERIC(10,2) DEFAULT 0.00,
+      expected_selling_price NUMERIC(10,2) DEFAULT 0.00,
+      estimated_shipping_cost NUMERIC(10,2) DEFAULT 0.00,
+      estimated_marketing_cost NUMERIC(10,2) DEFAULT 0.00,
+      estimated_units INTEGER DEFAULT 50,
+      competitor_price NUMERIC(10,2),
+      target_audience VARCHAR(255),
+      status VARCHAR(50) DEFAULT 'IDEA',
+      notes TEXT,
+      tags JSONB DEFAULT '[]'::jsonb,
+      converted_product_id UUID,
+      created_by UUID,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
   `);
 
-  await client.query('TRUNCATE TABLE inventory_transactions, products CASCADE');
+  try {
+    await client.query('TRUNCATE TABLE product_research, inventory_transactions, products CASCADE');
+  } catch (e) {
+    await client.query('TRUNCATE TABLE inventory_transactions, products CASCADE');
+  }
 
   const prodCols = ['id', 'business_id', 'dealer_id', 'name', 'sku', 'description', 'category', 'cost_price', 'selling_price', 'stock_quantity', 'reserved_quantity', 'low_stock_threshold', 'reorder_level', 'safety_stock', 'target_stock_days', 'images', 'status', 'created_at', 'updated_at'];
   await batchInsert(client, 'products', prodCols, data.products);
 
   const invCols = ['id', 'business_id', 'product_id', 'dealer_id', 'transaction_type', 'quantity', 'previous_quantity', 'new_quantity', 'reason', 'reference', 'notes', 'created_by', 'created_at', 'updated_at'];
   await batchInsert(client, 'inventory_transactions', invCols, data.inventoryTxns);
+
+  const prCols = ['id', 'business_id', 'product_name', 'product_url', 'category', 'dealer_id', 'source', 'estimated_cost', 'expected_selling_price', 'estimated_shipping_cost', 'estimated_marketing_cost', 'estimated_units', 'competitor_price', 'target_audience', 'status', 'notes', 'tags', 'converted_product_id', 'created_by', 'created_at', 'updated_at'];
+  await batchInsert(client, 'product_research', prCols, data.productResearch);
 }
 
 async function seedOrderDB(client, data) {
@@ -841,8 +937,33 @@ async function seedOrderDB(client, data) {
 }
 
 async function seedMarketingDB(client, data) {
-  console.log('  📈 Seeding Marketing Service DB (campaigns, social_accounts, posts, ads)...');
-  await client.query('TRUNCATE TABLE ads, posts, social_accounts, campaigns CASCADE');
+  console.log('  📈 Seeding Marketing Service DB (campaigns, social_accounts, posts, ads, creative_generations)...');
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS creative_generations (
+      id UUID PRIMARY KEY,
+      conversation_id UUID,
+      campaign_id UUID,
+      product_id UUID,
+      user_id UUID,
+      type VARCHAR(50) NOT NULL,
+      prompt TEXT NOT NULL,
+      reference_image_url TEXT,
+      previous_generation_id UUID,
+      generated_media_url TEXT,
+      status VARCHAR(50) DEFAULT 'PENDING',
+      provider VARCHAR(50),
+      provider_generation_id VARCHAR(255),
+      error_message TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+  `);
+
+  try {
+    await client.query('TRUNCATE TABLE creative_generations, ads, posts, social_accounts, campaigns CASCADE');
+  } catch (e) {
+    await client.query('TRUNCATE TABLE ads, posts, social_accounts, campaigns CASCADE');
+  }
 
   const campCols = ['id', 'business_id', 'name', 'description', 'objective', 'budget', 'start_date', 'end_date', 'status', 'created_by', 'created_at', 'updated_at'];
   await batchInsert(client, 'campaigns', campCols, data.campaigns);
@@ -855,6 +976,9 @@ async function seedMarketingDB(client, data) {
 
   const adCols = ['id', 'campaign_id', 'social_account_id', 'product_id', 'name', 'creative_url', 'budget', 'target_audience', 'start_date', 'end_date', 'status', 'external_ad_id', 'created_by', 'created_at', 'updated_at'];
   await batchInsert(client, 'ads', adCols, data.ads);
+
+  const cgCols = ['id', 'conversation_id', 'campaign_id', 'product_id', 'user_id', 'type', 'prompt', 'reference_image_url', 'previous_generation_id', 'generated_media_url', 'status', 'provider', 'provider_generation_id', 'error_message', 'created_at', 'updated_at'];
+  await batchInsert(client, 'creative_generations', cgCols, data.creativeGenerations);
 }
 
 async function seedAnalyticsDB(client, data) {
@@ -1089,6 +1213,12 @@ function verifyBusinessIsolation(data) {
 // MAIN RUNNER
 // ============================================================================
 async function runSeed() {
+  if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== 'true') {
+    console.warn('⚠️ [SAFETY GUARD] Destructive seeding operation is BLOCKED in production (NODE_ENV=production).');
+    console.warn('Set FORCE_SEED=true to override if you explicitly intend to seed production.');
+    process.exit(0);
+  }
+
   console.log('================================================================');
   console.log('🌱 STARTING COMPLETE MULTI-TENANT DATABASE RESET & RE-SEEDING');
   console.log('================================================================\n');
@@ -1138,26 +1268,33 @@ async function runSeed() {
   console.log('================================================================');
   console.log('🎉 SEEDING COMPLETED SUCCESSFULLY!');
   console.log('================================================================');
-  console.log(`  Businesses:        ${data.businesses.length}`);
-  console.log(`  Users:             ${data.users.length}`);
-  console.log(`  Dealers:           ${data.dealers.length}`);
-  console.log(`  Invitations:       ${data.invitations.length}`);
-  console.log(`  Customers:         ${data.customers.length}`);
-  console.log(`  Products:          ${data.products.length}`);
-  console.log(`  Orders:            ${data.orders.length}`);
-  console.log(`  Order Items:       ${data.orderItems.length}`);
-  console.log(`  Returns:           ${data.returns.length}`);
-  console.log(`  Campaigns:         ${data.campaigns.length}`);
-  console.log(`  Chat Messages:     ${data.chatMessages.length}`);
-  console.log(`  Expenses:          ${data.expenses.length}`);
-  console.log(`  Notifications:     ${data.notifications.length}`);
+  console.log(`  Businesses:              ${data.businesses.length}`);
+  console.log(`  Users:                   ${data.users.length}`);
+  console.log(`  Dealers:                 ${data.dealers.length}`);
+  console.log(`  Dealer Invitations:      ${data.invitations.length}`);
+  console.log(`  Customers:               ${data.customers.length}`);
+  console.log(`  Products:                ${data.products.length}`);
+  console.log(`  Inventory Transactions:  ${data.inventoryTxns.length}`);
+  console.log(`  Orders:                  ${data.orders.length}`);
+  console.log(`  Order Items:             ${data.orderItems.length}`);
+  console.log(`  Returns:                 ${data.returns.length}`);
+  console.log(`  Expenses:                ${data.expenses.length}`);
+  console.log(`  Marketing Campaigns:     ${data.campaigns.length}`);
+  console.log(`  Social Accounts:         ${data.socialAccounts.length}`);
+  console.log(`  Social Posts:            ${data.posts.length}`);
+  console.log(`  Advertisements:          ${data.ads.length}`);
+  console.log(`  Creative Generations:    ${data.creativeGenerations.length}`);
+  console.log(`  Product Research:        ${data.productResearch.length}`);
+  console.log(`  Notifications:           ${data.notifications.length}`);
+  console.log(`  Chat Messages:           ${data.chatMessages.length}`);
+  console.log(`  Audit Logs:              ${data.auditLogs.length}`);
   console.log('================================================================\n');
 
   console.log('Ready-to-use Portal Credentials (Password: Password123!):');
-  console.log('  🛡️ Admin Portal:      admin@dropship.com');
-  console.log('  🚚 Primary Dealer:    dealer@supplier.com');
-  console.log('  📢 Primary Marketer:  marketing@growth.com');
-  console.log('  💼 Primary Sales:     sales@dropship.com');
+  console.log('  🛡️ Admin Portal:          admin@dropship.com');
+  console.log('  🚚 Primary Dealer:        dealer@supplier.com');
+  console.log('  📢 Primary Marketer:      marketing@growth.com');
+  console.log('  💼 Primary Sales:         sales@dropship.com');
   console.log('================================================================\n');
 }
 
