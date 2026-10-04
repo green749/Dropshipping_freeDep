@@ -18,7 +18,7 @@ const DEFAULT_PASSWORD = 'Password123!';
 // Helper to create PostgreSQL client
 function createClient(database) {
   const isProd = env.NODE_ENV === 'production' || env.DB.HOST.includes('onrender.com') || env.DB.HOST.startsWith('dpg-');
-  return new pg.Client({
+  const client = new pg.Client({
     host: env.DB.HOST || 'localhost',
     port: env.DB.PORT || 5432,
     user: env.DB.USER || 'postgres',
@@ -26,6 +26,36 @@ function createClient(database) {
     database,
     ssl: isProd ? { rejectUnauthorized: false } : false,
   });
+  client.on('error', (err) => {
+    console.warn(`⚠️ [DB Client Warning ${database}]:`, err.message);
+  });
+  return client;
+}
+
+// Helper for fast batch inserts
+async function batchInsert(client, table, columns, data, batchSize = 100) {
+  if (!data || data.length === 0) return;
+  for (let i = 0; i < data.length; i += batchSize) {
+    const chunk = data.slice(i, i + batchSize);
+    const valuePlaceholders = [];
+    const values = [];
+    let valIndex = 1;
+
+    chunk.forEach((row) => {
+      const rowParams = [];
+      columns.forEach((col) => {
+        let val = row[col];
+        if (val instanceof Date) val = val.toISOString();
+        else if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+        values.push(val);
+        rowParams.push(`$${valIndex++}`);
+      });
+      valuePlaceholders.push(`(${rowParams.join(', ')})`);
+    });
+
+    const queryStr = `INSERT INTO ${table} (${columns.join(', ')}) VALUES ${valuePlaceholders.join(', ')}`;
+    await client.query(queryStr, values);
+  }
 }
 
 // Generate realistic dataset in memory
@@ -735,34 +765,6 @@ function generateDataset(passwordHash) {
 }
 
 // ============================================================================
-// HELPER FOR FAST BATCH INSERTS
-// ============================================================================
-async function batchInsert(client, table, columns, data, batchSize = 500) {
-  if (!data || data.length === 0) return;
-  for (let i = 0; i < data.length; i += batchSize) {
-    const chunk = data.slice(i, i + batchSize);
-    const valuePlaceholders = [];
-    const values = [];
-    let valIndex = 1;
-
-    chunk.forEach((row) => {
-      const rowParams = [];
-      columns.forEach((col) => {
-        let val = row[col];
-        if (val instanceof Date) val = val.toISOString();
-        else if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
-        values.push(val);
-        rowParams.push(`$${valIndex++}`);
-      });
-      valuePlaceholders.push(`(${rowParams.join(', ')})`);
-    });
-
-    const queryStr = `INSERT INTO ${table} (${columns.join(', ')}) VALUES ${valuePlaceholders.join(', ')}`;
-    await client.query(queryStr, values);
-  }
-}
-
-// ============================================================================
 // SERVICE DB SEEDERS
 // ============================================================================
 async function seedAuthDB(client, data, passwordHash) {
@@ -910,6 +912,18 @@ async function seedOrderDB(client, data) {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
+
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS order_number VARCHAR(255);
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS business_id UUID;
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS customer_id UUID;
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS dealer_id UUID;
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS dealer_name VARCHAR(255);
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS product_id UUID;
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS product_name VARCHAR(255);
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS requested_date TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS refund_amount NUMERIC(10,2) DEFAULT 0.00;
+    ALTER TABLE returns ADD COLUMN IF NOT EXISTS resolution TEXT;
 
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP WITH TIME ZONE;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMP WITH TIME ZONE;
