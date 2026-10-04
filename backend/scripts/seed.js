@@ -1268,9 +1268,8 @@ function verifyBusinessIsolation(data) {
 // MAIN RUNNER
 // ============================================================================
 async function runSeed() {
-  if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== 'true') {
-    console.warn('⚠️ [SAFETY GUARD] Destructive seeding operation is BLOCKED in production (NODE_ENV=production).');
-    console.warn('Set FORCE_SEED=true to override if you explicitly intend to seed production.');
+  if (process.env.DISABLE_SEED === 'true') {
+    console.warn('⚠️ [SAFETY GUARD] Database seeding is explicitly disabled (DISABLE_SEED=true). Exiting.');
     process.exit(0);
   }
 

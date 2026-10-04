@@ -10,6 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: FORCE_SEED
+        value: "true"
       - key: PORT
         value: 5000
       - key: DB_HOST

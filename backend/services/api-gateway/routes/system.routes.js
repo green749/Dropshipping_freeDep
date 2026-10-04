@@ -84,6 +84,28 @@ router.post('/cache/flush', async (req, res) => {
   }
 });
 
+// Admin Triggered Database Reseed
+router.post('/reseed', async (req, res) => {
+  try {
+    const { exec } = await import('child_process');
+    exec('node scripts/seed.js', { env: { ...process.env, FORCE_SEED: 'true' } }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('⚠️ [RESEED API] Reseed execution error:', stderr || error.message);
+      } else {
+        console.log('✅ [RESEED API] Database successfully re-seeded:', stdout);
+      }
+    });
+    await CacheService.flush();
+    res.status(200).json({
+      success: true,
+      message: 'Database re-seeding process initiated and cache flushed successfully.',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 5. On-Demand Performance Stress Test & Benchmark
 router.post('/benchmark', async (req, res) => {
   try {
