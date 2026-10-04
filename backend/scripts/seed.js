@@ -6,6 +6,7 @@ import {
   BUSINESS_TEMPLATES,
   BUSINESS_CATEGORIES,
   PRODUCT_CATALOG_TEMPLATES,
+  PRODUCT_CATEGORY_IMAGES,
   FIRST_NAMES,
   LAST_NAMES,
   CITIES_STATES,
@@ -344,6 +345,9 @@ function generateDataset(passwordHash) {
         const sellingPrice = parseFloat((costPrice * (1 + bt.profit_margin / 100)).toFixed(2));
         const stockQty = 20 + (prodCounter * 17) % 220;
 
+        const categoryImageList = PRODUCT_CATEGORY_IMAGES[catName] || [bt.logo];
+        const pImg = categoryImageList[p % categoryImageList.length];
+
         const prodObj = {
           id: uuidv4(),
           business_id: bt.id,
@@ -360,7 +364,7 @@ function generateDataset(passwordHash) {
           reorder_level: 15,
           safety_stock: 5,
           target_stock_days: 14,
-          images: JSON.stringify([bt.logo]),
+          images: JSON.stringify([pImg]),
           status: 'ACTIVE',
           created_at: new Date(nowMs - 365 * 86400 * 1000),
           updated_at: now

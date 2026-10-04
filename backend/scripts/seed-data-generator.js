@@ -206,6 +206,176 @@ export const PRODUCT_CATALOG_TEMPLATES = {
   'Drinkware & Flasks': ['Insulated Stainless Tumbler 40oz with Straw', 'Vacuum Insulated Water Bottle 32oz', 'Glass Water Bottle with Silicone Sleeve', 'Travel Coffee Mug Leakproof 16oz', 'Fruit Infuser Water Pitcher 2L']
 };
 
+// Category-Specific Unsplash Images for realistic product visualization
+export const PRODUCT_CATEGORY_IMAGES = {
+  'Kidswear & Frocks': [
+    'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Boys Casuals & Shirts': [
+    'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Urban Activewear': [
+    'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1483721074892-4a8580712dd6?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Outerwear': [
+    'https://images.unsplash.com/photo-1544441893-675973e31985?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Leather Goods': [
+    'https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Modern Furniture': [
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Ambient Lighting': [
+    'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Kitchenware': [
+    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Home Decor': [
+    'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Organization': [
+    'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Pro Audio': [
+    'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Ergonomics': [
+    'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1580481072645-022f9a6d83d0?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Keyboards & Mice': [
+    'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Creator Studio': [
+    'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Display & Mounts': [
+    'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Pet Food & Treats': [
+    'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Interactive Toys': [
+    'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Smart Feeders': [
+    'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Grooming & Care': [
+    'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Beds & Furniture': [
+    'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Chef Cookware': [
+    'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Small Appliances': [
+    'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Coffee & Espresso': [
+    'https://images.unsplash.com/photo-1517668808822-9e428824603b?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Bakeware Pro': [
+    'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Kitchen Gadgets': [
+    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Weights & Dumbbells': [
+    'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Cardio Equipment': [
+    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Recovery & Massage': [
+    'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Fitness Wearables': [
+    'https://images.unsplash.com/photo-1510017803434-a899398421b3?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Yoga & Mobility': [
+    'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Smart Home IoT': [
+    'https://images.unsplash.com/photo-1558002038-1055907df827?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Drones & Action Cams': [
+    'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Wireless Chargers': [
+    'https://images.unsplash.com/photo-1622445268465-843d63599159?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Portable Power': [
+    'https://images.unsplash.com/photo-1609592424074-b52e259b392a?w=400&auto=format&fit=crop&q=80'
+  ],
+  'AR/VR Accessories': [
+    'https://images.unsplash.com/photo-1622979135225-d2ba269bc1bd?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Organic Skincare': [
+    'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Hair Elixirs': [
+    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Botanical Serums': [
+    'https://images.unsplash.com/photo-1608248597263-000782701764?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Wellness & Spa': [
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Cosmetics': [
+    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Dash Cams': [
+    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Car Detailing': [
+    'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Jump Starters': [
+    'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Interior Ergonomics': [
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Tire & Maintenance': [
+    'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Eco Cleaning': [
+    'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Desk Storage': [
+    'https://images.unsplash.com/photo-1507208773393-40d9fc670acf?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Containers & Jars': [
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Stationery & Paper': [
+    'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=400&auto=format&fit=crop&q=80'
+  ],
+  'Drinkware & Flasks': [
+    'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&auto=format&fit=crop&q=80'
+  ]
+};
+
 // Generic First & Last Names for realistic synthesis
 export const FIRST_NAMES = [
   'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth',
