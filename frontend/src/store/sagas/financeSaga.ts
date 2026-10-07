@@ -24,44 +24,56 @@ import {
   expenseDeleted,
 } from '../slices/financeSlice';
 
-function* handleFetchProfitSummary(action: ReturnType<typeof fetchProfitSummary>): Generator<any, void, any> {
+function* handleFetchProfitSummary(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(financeApi.getProfitSummary, action.payload);
     yield put(setProfitSummary(response.data));
+    action.meta?.resolve?.(response.data);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load profit summary'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load profit summary';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchProfitTimeline(action: ReturnType<typeof fetchProfitTimeline>): Generator<any, void, any> {
+function* handleFetchProfitTimeline(action: any): Generator<any, void, any> {
   try {
     const response = yield call(financeApi.getProfitTimeline, action.payload);
     yield put(setProfitTimeline(response.data || []));
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load profit timeline'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load profit timeline';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchProductProfitability(action: ReturnType<typeof fetchProductProfitability>): Generator<any, void, any> {
+function* handleFetchProductProfitability(action: any): Generator<any, void, any> {
   try {
     const response = yield call(financeApi.getProductProfitability, action.payload);
     yield put(setProductProfitability(response.data || []));
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load product profitability'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load product profitability';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchOrderProfitability(action: ReturnType<typeof fetchOrderProfitability>): Generator<any, void, any> {
+function* handleFetchOrderProfitability(action: any): Generator<any, void, any> {
   try {
     const response = yield call(financeApi.getOrderProfitability, action.payload);
     yield put(setOrderProfitability(response.data || []));
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load order profitability'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load order profitability';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchExpenses(action: ReturnType<typeof fetchExpenses>): Generator<any, void, any> {
+function* handleFetchExpenses(action: any): Generator<any, void, any> {
   try {
     yield put(setExpensesLoading(true));
     const response = yield call(financeApi.getExpenses, action.payload);
@@ -71,21 +83,27 @@ function* handleFetchExpenses(action: ReturnType<typeof fetchExpenses>): Generat
         pagination: response.pagination,
       })
     );
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load expenses'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load expenses';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchExpenseSummary(action: ReturnType<typeof fetchExpenseSummary>): Generator<any, void, any> {
+function* handleFetchExpenseSummary(action: any): Generator<any, void, any> {
   try {
     const response = yield call(financeApi.getExpenseSummary, action.payload);
     yield put(setExpenseSummary(response.data));
+    action.meta?.resolve?.(response.data);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load expense summary'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load expense summary';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleCreateExpense(action: ReturnType<typeof createExpenseAction>): Generator<any, void, any> {
+function* handleCreateExpense(action: any): Generator<any, void, any> {
   try {
     yield put(setExpensesLoading(true));
     const response = yield call(financeApi.createExpense, action.payload);
@@ -93,30 +111,39 @@ function* handleCreateExpense(action: ReturnType<typeof createExpenseAction>): G
     // Refresh profit summary and timeline in background
     yield put(fetchProfitSummary({ business_id: action.payload.business_id }));
     yield put(fetchProfitTimeline({ business_id: action.payload.business_id }));
+    action.meta?.resolve?.(response.data || response);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to create expense'));
+    const msg = err.response?.data?.message || err.message || 'Failed to create expense';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleUpdateExpense(action: ReturnType<typeof updateExpenseAction>): Generator<any, void, any> {
+function* handleUpdateExpense(action: any): Generator<any, void, any> {
   try {
     yield put(setExpensesLoading(true));
     const response = yield call(financeApi.updateExpense, action.payload.id, action.payload.data);
     yield put(expenseUpdated(response.data));
     // Refresh summary
     yield put(fetchProfitSummary({ business_id: action.payload.data.business_id }));
+    action.meta?.resolve?.(response.data || response);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to update expense'));
+    const msg = err.response?.data?.message || err.message || 'Failed to update expense';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleDeleteExpense(action: ReturnType<typeof deleteExpenseAction>): Generator<any, void, any> {
+function* handleDeleteExpense(action: any): Generator<any, void, any> {
   try {
     yield put(setExpensesLoading(true));
     yield call(financeApi.deleteExpense, action.payload);
     yield put(expenseDeleted(action.payload));
+    action.meta?.resolve?.(action.payload);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to delete expense'));
+    const msg = err.response?.data?.message || err.message || 'Failed to delete expense';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 

@@ -19,17 +19,20 @@ import {
   mutationSuccess,
 } from '../slices/dealerPerformanceSlice';
 
-function* handleFetchSummary(action: ReturnType<typeof fetchDealerPerformanceSummary>): Generator<any, void, any> {
+function* handleFetchSummary(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(dealerPerformanceApi.getSummary, action.payload);
     yield put(setSummary(response.data));
+    action.meta?.resolve?.(response.data);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load dealer performance summary'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load dealer performance summary';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchList(action: ReturnType<typeof fetchDealerPerformanceList>): Generator<any, void, any> {
+function* handleFetchList(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(dealerPerformanceApi.getList, action.payload);
@@ -39,12 +42,15 @@ function* handleFetchList(action: ReturnType<typeof fetchDealerPerformanceList>)
         pagination: response.pagination,
       })
     );
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load dealer performance list'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load dealer performance list';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchDetail(action: ReturnType<typeof fetchDealerPerformanceDetail>): Generator<any, void, any> {
+function* handleFetchDetail(action: any): Generator<any, void, any> {
   try {
     yield put(setDetailLoading(true));
     const response = yield call(dealerPerformanceApi.getDetail, action.payload.id, {
@@ -52,12 +58,15 @@ function* handleFetchDetail(action: ReturnType<typeof fetchDealerPerformanceDeta
       timeframe: action.payload.timeframe,
     });
     yield put(setDetail(response.data));
+    action.meta?.resolve?.(response.data);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load dealer details'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load dealer details';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchComparison(action: ReturnType<typeof fetchDealerComparison>): Generator<any, void, any> {
+function* handleFetchComparison(action: any): Generator<any, void, any> {
   try {
     yield put(setCompareLoading(true));
     const response = yield call(dealerPerformanceApi.getComparison, action.payload.dealerIds, {
@@ -65,38 +74,47 @@ function* handleFetchComparison(action: ReturnType<typeof fetchDealerComparison>
       timeframe: action.payload.timeframe,
     });
     yield put(setComparison(response.data?.dealers || []));
+    action.meta?.resolve?.(response.data?.dealers || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load dealer comparison'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load dealer comparison';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleUpdateSla(action: ReturnType<typeof updateDealerSlaAction>): Generator<any, void, any> {
+function* handleUpdateSla(action: any): Generator<any, void, any> {
   try {
     yield put(setMutating(true));
-    yield call(() => dealerPerformanceApi.updateSla(action.payload.id || '', action.payload.data));
+    const res = yield call(() => dealerPerformanceApi.updateSla(action.payload.id || '', action.payload.data));
     yield put(mutationSuccess());
     yield put(fetchDealerPerformanceSummary(undefined));
     yield put(fetchDealerPerformanceList(undefined));
     if (action.payload?.id) {
       yield put(fetchDealerPerformanceDetail({ id: action.payload.id }));
     }
+    action.meta?.resolve?.(res?.data || true);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to update dealer SLA'));
+    const msg = err.response?.data?.message || err.message || 'Failed to update dealer SLA';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleUpdateStatus(action: ReturnType<typeof updateDealerStatusAction>): Generator<any, void, any> {
+function* handleUpdateStatus(action: any): Generator<any, void, any> {
   try {
     yield put(setMutating(true));
-    yield call(() => dealerPerformanceApi.updateStatus(action.payload.id || '', action.payload.status || 'ACTIVE'));
+    const res = yield call(() => dealerPerformanceApi.updateStatus(action.payload.id || '', action.payload.status || 'ACTIVE'));
     yield put(mutationSuccess());
     yield put(fetchDealerPerformanceSummary(undefined));
     yield put(fetchDealerPerformanceList(undefined));
     if (action.payload?.id) {
       yield put(fetchDealerPerformanceDetail({ id: action.payload.id }));
     }
+    action.meta?.resolve?.(res?.data || true);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to update dealer status'));
+    const msg = err.response?.data?.message || err.message || 'Failed to update dealer status';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 

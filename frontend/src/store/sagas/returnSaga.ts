@@ -11,33 +11,42 @@ import {
   returnUpdated,
 } from '../slices/returnSlice';
 
-function* handleFetchReturns(action: ReturnType<typeof fetchReturns>): Generator<any, void, any> {
+function* handleFetchReturns(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(returnApi.getAll, action.payload);
     yield put(setReturns(response.data || []));
+    action.meta?.resolve?.(response.data || []);
   } catch (err: any) {
-    yield put(setError(err.message || 'Failed to load returns'));
+    const msg = err.message || 'Failed to load returns';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleCreateReturn(action: ReturnType<typeof createReturn>): Generator<any, void, any> {
+function* handleCreateReturn(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(returnApi.create, action.payload);
     yield put(returnCreated(response.data));
+    action.meta?.resolve?.(response.data || response);
   } catch (err: any) {
-    yield put(setError(err.message || 'Failed to create return'));
+    const msg = err.message || 'Failed to create return';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleUpdateReturnStatus(action: ReturnType<typeof updateReturnStatus>): Generator<any, void, any> {
+function* handleUpdateReturnStatus(action: any): Generator<any, void, any> {
   try {
     yield put(setLoading(true));
     const response = yield call(returnApi.updateStatus, action.payload.id, action.payload.status, action.payload.resolution);
     yield put(returnUpdated(response.data));
+    action.meta?.resolve?.(response.data || response);
   } catch (err: any) {
-    yield put(setError(err.message || 'Failed to update return status'));
+    const msg = err.message || 'Failed to update return status';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 

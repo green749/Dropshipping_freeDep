@@ -19,7 +19,7 @@ import {
 import { addToast } from '../slices/uiSlice';
 import type { RootState } from '../index';
 
-function* handleFetchList(action: ReturnType<typeof fetchProductResearchList>): Generator<any, void, any> {
+function* handleFetchList(action: any): Generator<any, void, any> {
   try {
     yield put(setListLoading(true));
     const state: RootState = yield select();
@@ -55,22 +55,28 @@ function* handleFetchList(action: ReturnType<typeof fetchProductResearchList>): 
 
     const res = yield call(productResearchApi.getAll, params);
     yield put(setListSuccess({ items: res.data || [], pagination: res.pagination }));
+    action.meta?.resolve?.(res.data || []);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load research workspace items'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load research workspace items';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleFetchById(action: ReturnType<typeof fetchProductResearchById>): Generator<any, void, any> {
+function* handleFetchById(action: any): Generator<any, void, any> {
   try {
     yield put(setItemLoading(true));
     const res = yield call(productResearchApi.getById, action.payload);
     yield put(setItemSuccess(res.data || res));
+    action.meta?.resolve?.(res.data || res);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to load research item'));
+    const msg = err.response?.data?.message || err.message || 'Failed to load research item';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleCreate(action: ReturnType<typeof createProductResearchAction>): Generator<any, void, any> {
+function* handleCreate(action: any): Generator<any, void, any> {
   try {
     yield put(setMutating(true));
     const res = yield call(productResearchApi.create, action.payload);
@@ -82,18 +88,21 @@ function* handleCreate(action: ReturnType<typeof createProductResearchAction>): 
       })
     );
     yield put(fetchProductResearchList(undefined));
+    action.meta?.resolve?.(res.data || res);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to create research item'));
+    const msg = err.response?.data?.message || err.message || 'Failed to create research item';
+    yield put(setError(msg));
     yield put(
       addToast({
         type: 'error',
-        message: err.response?.data?.message || err.message || 'Failed to create research item',
+        message: msg,
       })
     );
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleUpdate(action: ReturnType<typeof updateProductResearchAction>): Generator<any, void, any> {
+function* handleUpdate(action: any): Generator<any, void, any> {
   try {
     yield put(setMutating(true));
     const res = yield call(productResearchApi.update, action.payload.id, action.payload.payload);
@@ -105,18 +114,21 @@ function* handleUpdate(action: ReturnType<typeof updateProductResearchAction>): 
       })
     );
     yield put(fetchProductResearchList(undefined));
+    action.meta?.resolve?.(res.data || res);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to update research item'));
+    const msg = err.response?.data?.message || err.message || 'Failed to update research item';
+    yield put(setError(msg));
     yield put(
       addToast({
         type: 'error',
-        message: err.response?.data?.message || err.message || 'Failed to update research item',
+        message: msg,
       })
     );
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleDelete(action: ReturnType<typeof deleteProductResearchAction>): Generator<any, void, any> {
+function* handleDelete(action: any): Generator<any, void, any> {
   try {
     yield put(setMutating(true));
     yield call(productResearchApi.delete, action.payload);
@@ -128,12 +140,15 @@ function* handleDelete(action: ReturnType<typeof deleteProductResearchAction>): 
       })
     );
     yield put(fetchProductResearchList(undefined));
+    action.meta?.resolve?.(action.payload);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to delete research item'));
+    const msg = err.response?.data?.message || err.message || 'Failed to delete research item';
+    yield put(setError(msg));
+    action.meta?.reject?.(msg);
   }
 }
 
-function* handleConvert(action: ReturnType<typeof convertProductResearchAction>): Generator<any, void, any> {
+function* handleConvert(action: any): Generator<any, void, any> {
   try {
     yield put(setConverting(true));
     const res = yield call(
@@ -149,14 +164,17 @@ function* handleConvert(action: ReturnType<typeof convertProductResearchAction>)
       })
     );
     yield put(fetchProductResearchList(undefined));
+    action.meta?.resolve?.(res.data || res);
   } catch (err: any) {
-    yield put(setError(err.response?.data?.message || err.message || 'Failed to convert research item to live product'));
+    const msg = err.response?.data?.message || err.message || 'Failed to convert research item to live product';
+    yield put(setError(msg));
     yield put(
       addToast({
         type: 'error',
-        message: err.response?.data?.message || err.message || 'Failed to convert research item to product',
+        message: msg,
       })
     );
+    action.meta?.reject?.(msg);
   }
 }
 

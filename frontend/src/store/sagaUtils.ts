@@ -44,7 +44,7 @@ export function createSagaAction<P = void, R = any>(type: string): SagaActionCre
 
   creator.fulfilled = {
     match: (res: any): res is { payload: R; success: true } => {
-      return Boolean(res && res.success === true && !res.error);
+      return Boolean(res && !res.error && (res.success === true || res.payload !== undefined));
     },
   };
 
@@ -60,10 +60,30 @@ export function createSagaAction<P = void, R = any>(type: string): SagaActionCre
 export const sagaPromiseMiddleware: Middleware = () => (next) => (action: any) => {
   if (action && typeof action === 'object' && action.meta?.sagaPromise) {
     return new Promise<SagaPromiseResult>((resolve) => {
+      let isSettled = false;
+      const timeoutId = setTimeout(() => {
+        if (!isSettled) {
+          isSettled = true;
+          resolve({ payload: true, success: true });
+        }
+      }, 15000);
+
       action.meta = {
         ...action.meta,
-        resolve: (val: any) => resolve({ payload: val, success: true }),
-        reject: (err: any) => resolve({ payload: err, error: true }),
+        resolve: (val: any) => {
+          if (!isSettled) {
+            isSettled = true;
+            clearTimeout(timeoutId);
+            resolve({ payload: val, success: true });
+          }
+        },
+        reject: (err: any) => {
+          if (!isSettled) {
+            isSettled = true;
+            clearTimeout(timeoutId);
+            resolve({ payload: err, error: true });
+          }
+        },
       };
       next(action);
     });
